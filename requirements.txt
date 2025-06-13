@@ -1,0 +1,6 @@
+flask>=2.0.1
+numpy>=2.1.0
+opencv-python>=4.8.0
+Pillow>=10.0.0
+roboflow
+python-dotenv 
