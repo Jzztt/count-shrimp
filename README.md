@@ -1,9 +1,22 @@
 # Hệ Thống Đếm Tôm
 
-Đây là một ứng dụng Python để đếm số lượng tôm trong ảnh sử dụng kỹ thuật xử lý ảnh.
+Đây là một ứng dụng web để đếm số lượng tôm trong ảnh sử dụng kỹ thuật xử lý ảnh, được xây dựng với React (Frontend) và Flask (Backend).
+
+## Cấu trúc dự án
+
+```
+project/
+├── web_app/          # Frontend React application
+└── backend/          # Backend Flask API
+```
 
 ## Yêu cầu hệ thống
 
+### Frontend (React)
+- Node.js 14.0 trở lên
+- npm hoặc yarn
+
+### Backend (Flask)
 - Python 3.7 trở lên
 - OpenCV
 - NumPy
@@ -11,33 +24,91 @@
 
 ## Cài đặt
 
-1. Cài đặt các thư viện cần thiết:
+### Frontend
+1. Di chuyển vào thư mục web_app:
+```bash
+cd web_app
+```
+
+2. Cài đặt dependencies:
+```bash
+npm install
+# hoặc
+yarn install
+```
+
+3. Chạy ứng dụng React:
+```bash
+npm start
+# hoặc
+yarn start
+```
+
+### Backend
+1. Di chuyển vào thư mục backend:
+```bash
+cd backend
+```
+
+2. Tạo và kích hoạt môi trường ảo:
+```bash
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux/Mac
+source .venv/bin/activate
+```
+
+3. Cài đặt dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
+4. Chạy Flask server:
+```bash
+python app.py
+```
+
 ## Cách sử dụng
 
-1. Tạo thư mục `input_images` (nếu chưa có)
-2. Đặt các ảnh cần đếm tôm vào thư mục `input_images`
-3. Chạy chương trình:
-```bash
-python shrimp_counter.py
-```
-4. Kết quả sẽ được lưu trong thư mục `output_images`
+1. Truy cập ứng dụng web tại `http://localhost:3000`
+2. Tải lên ảnh cần đếm tôm
+3. Hệ thống sẽ tự động xử lý và hiển thị kết quả
 
 ## Các tính năng
 
+- Giao diện web thân thiện với người dùng
 - Tự động phát hiện và đếm số lượng tôm trong ảnh
 - Hiển thị kết quả trực quan với đường viền xanh quanh mỗi con tôm
 - Hiển thị số lượng tôm được đếm trên ảnh kết quả
 - Xử lý được nhiều ảnh cùng lúc
 
+## API Endpoints
+
+### `/api/count-shrimp`
+- Method: POST
+- Content-Type: multipart/form-data
+- Parameter: image (file)
+
+### Response format:
+```json
+{
+    "success": true,
+    "shrimp_count": 10,
+    "live_shrimp": 6,
+    "cooked_shrimp": 4,
+    "debug_info": {
+        // Thông tin debug chi tiết
+    }
+}
+```
+
 ## Lưu ý
 
 - Ảnh đầu vào nên có độ phân giải tốt và độ tương phản rõ ràng
 - Các con tôm không nên chồng lấn lên nhau quá nhiều
-- Hỗ trợ các file ảnh định dạng .jpg 
+- Hỗ trợ các file ảnh định dạng .jpg, .jpeg, .png
+- API có thể phân biệt giữa tôm sống và tôm chín
 
 # API Đếm Tôm
 
