@@ -11,16 +11,35 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { cn } from "@/lib/utils";
 
 const API_URL = "http://localhost:5000/process";
 const CLASSIC_API_URL = "http://localhost:5000/classic-process";
 
-const Upload: React.FC = () => {
+const UploadComponent: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -52,9 +71,20 @@ const Upload: React.FC = () => {
     setLoading(false);
   };
 
+  // Tính toán dữ liệu cho trang hiện tại
+  const getCurrentPageData = () => {
+    if (!result?.features) return [];
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return result.features.slice(startIndex, endIndex);
+  };
+
+  // Tính toán tổng số trang
+  const totalPages = result?.features ? Math.ceil(result.features.length / itemsPerPage) : 0;
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white px-2">
-      <Card className="w-full max-w-md bg-neutral-900 border border-neutral-800 shadow-xl">
+      <Card className="w-[900px] bg-neutral-900 border border-neutral-800 shadow-xl">
         <CardHeader className="flex flex-col items-center gap-2">
           <GiShrimp className="text-4xl text-pink-400 mb-1" />
           <CardTitle className="text-2xl font-bold text-white tracking-tight">Shrimp Counter AI</CardTitle>
@@ -125,27 +155,124 @@ const Upload: React.FC = () => {
                     </div>
                     {result.features && (
                       <div className="w-full mb-4">
-                        <h4 className="text-lg font-semibold mb-2">Thông số chi tiết:</h4>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="border-b border-neutral-700">
-                                <th className="py-2 px-4">ID</th>
-                                <th className="py-2 px-4">Diện tích</th>
-                                <th className="py-2 px-4">Chu vi</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {result.features.map((feature: any) => (
-                                <tr key={feature.id} className="border-b border-neutral-700">
-                                  <td className="py-2 px-4">{feature.id}</td>
-                                  <td className="py-2 px-4">{feature.area}</td>
-                                  <td className="py-2 px-4">{feature.perimeter}</td>
-                                </tr>
+                        <h4 className="text-lg font-semibold mb-2 text-white">Thông số chi tiết:</h4>
+                        <div className="rounded-md border border-neutral-800">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="border-neutral-800">
+                                <TableHead className="text-white">ID</TableHead>
+                                <TableHead className="text-white">Diện tích</TableHead>
+                                <TableHead className="text-white">Chu vi</TableHead>
+                                <TableHead className="text-white">Độ tin cậy</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {getCurrentPageData().map((feature: any) => (
+                                <TableRow key={feature.id} className="border-neutral-800">
+                                  <TableCell className="text-white">{feature.id}</TableCell>
+                                  <TableCell className="text-white">{feature.area}</TableCell>
+                                  <TableCell className="text-white">{feature.perimeter}</TableCell>
+                                  <TableCell className="text-white">
+                                    {feature.confidence ? `${(feature.confidence * 100).toFixed(2)}%` : 'N/A'}
+                                  </TableCell>
+                                </TableRow>
                               ))}
-                            </tbody>
-                          </table>
+                            </TableBody>
+                          </Table>
                         </div>
+                        {totalPages > 1 && (
+                          <div className="mt-4 flex justify-center">
+                            <Pagination>
+                              <PaginationContent className="flex-wrap">
+                                <PaginationItem>
+                                  <PaginationPrevious 
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    className={cn(
+                                      currentPage === 1 ? 'pointer-events-none opacity-50' : '',
+                                      'text-white hover:text-white'
+                                    )}
+                                  />
+                                </PaginationItem>
+                                
+                                {/* First page */}
+                                <PaginationItem>
+                                  <PaginationLink
+                                    onClick={() => setCurrentPage(1)}
+                                    isActive={currentPage === 1}
+                                    className={cn(
+                                      'text-white hover:text-white',
+                                      currentPage === 1 ? 'bg-pink-500 hover:bg-pink-600' : 'hover:bg-neutral-800'
+                                    )}
+                                  >
+                                    1
+                                  </PaginationLink>
+                                </PaginationItem>
+
+                                {/* Left ellipsis */}
+                                {currentPage > 3 && (
+                                  <PaginationItem>
+                                    <span className="px-4 text-white">...</span>
+                                  </PaginationItem>
+                                )}
+
+                                {/* Current page and neighbors */}
+                                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                  .filter(page => {
+                                    if (totalPages <= 5) return true;
+                                    if (page === 1 || page === totalPages) return false;
+                                    return Math.abs(currentPage - page) <= 1;
+                                  })
+                                  .map((page) => (
+                                    <PaginationItem key={page}>
+                                      <PaginationLink
+                                        onClick={() => setCurrentPage(page)}
+                                        isActive={currentPage === page}
+                                        className={cn(
+                                          'text-white hover:text-white',
+                                          currentPage === page ? 'bg-pink-500 hover:bg-pink-600' : 'hover:bg-neutral-800'
+                                        )}
+                                      >
+                                        {page}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  ))}
+
+                                {/* Right ellipsis */}
+                                {currentPage < totalPages - 2 && (
+                                  <PaginationItem>
+                                    <span className="px-4 text-white">...</span>
+                                  </PaginationItem>
+                                )}
+
+                                {/* Last page */}
+                                {totalPages > 1 && (
+                                  <PaginationItem>
+                                    <PaginationLink
+                                      onClick={() => setCurrentPage(totalPages)}
+                                      isActive={currentPage === totalPages}
+                                      className={cn(
+                                        'text-white hover:text-white',
+                                        currentPage === totalPages ? 'bg-pink-500 hover:bg-pink-600' : 'hover:bg-neutral-800'
+                                      )}
+                                    >
+                                      {totalPages}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                )}
+
+                                <PaginationItem>
+                                  <PaginationNext
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    className={cn(
+                                      currentPage === totalPages ? 'pointer-events-none opacity-50' : '',
+                                      'text-white hover:text-white'
+                                    )}
+                                  />
+                                </PaginationItem>
+                              </PaginationContent>
+                            </Pagination>
+                          </div>
+                        )}
                       </div>
                     )}
                     {result.result_image && (
@@ -176,8 +303,41 @@ const Upload: React.FC = () => {
       <footer className="mt-8 text-xs text-neutral-500 text-center opacity-70">
         &copy; {new Date().getFullYear()} Shrimp Counter AI. Made with <span className="text-pink-400">♥</span>
       </footer>
+
+      <style jsx global>{`
+        .custom-table .ant-table {
+          background-color: #1f1f1f;
+          color: white;
+        }
+        .custom-table .ant-table-thead > tr > th {
+          background-color: #141414;
+          color: white;
+          border-bottom: 1px solid #303030;
+        }
+        .custom-table .ant-table-tbody > tr > td {
+          background-color: #1f1f1f;
+          color: white;
+          border-bottom: 1px solid #303030;
+        }
+        .custom-table .ant-table-tbody > tr:hover > td {
+          background-color: #2f2f2f;
+        }
+        .ant-pagination-item a {
+          color: white;
+        }
+        .ant-pagination-item-active {
+          background-color: #1890ff;
+        }
+        .ant-pagination-item-active a {
+          color: white;
+        }
+        .ant-pagination-prev button,
+        .ant-pagination-next button {
+          color: white;
+        }
+      `}</style>
     </div>
   );
 };
 
-export default Upload; 
+export default UploadComponent; 
