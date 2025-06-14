@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 
 const API_URL = "http://localhost:5000/process";
+const CLASSIC_API_URL = "http://localhost:5000/classic-process";
 
 const Upload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -30,7 +31,7 @@ const Upload: React.FC = () => {
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (method: 'roboflow' | 'traditional') => {
     if (!file) return;
     setLoading(true);
     setError(null);
@@ -38,7 +39,7 @@ const Upload: React.FC = () => {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(method === 'roboflow' ? API_URL : CLASSIC_API_URL, {
         method: "POST",
         body: formData,
       });
@@ -84,13 +85,22 @@ const Upload: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-            <Button
-              onClick={handleUpload}
-              disabled={!file || loading}
-              className="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-            >
-              {loading ? "Đang xử lý..." : "Upload Image"}
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={() => handleUpload('roboflow')}
+                disabled={!file || loading}
+                className="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                {loading ? "Đang xử lý..." : "Đếm tôm (Roboflow)"}
+              </Button>
+              <Button
+                onClick={() => handleUpload('traditional')}
+                disabled={!file || loading}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                {loading ? "Đang xử lý..." : "Đếm tôm (Phương pháp truyền thống)"}
+              </Button>
+            </div>
             {error && (
               <Alert variant="destructive">
                 <AlertTitle>Lỗi</AlertTitle>
@@ -113,6 +123,31 @@ const Upload: React.FC = () => {
                     <div className="mb-4 text-2xl text-white">
                       Số lượng tôm: <span className="font-bold text-pink-400">{result.count}</span>
                     </div>
+                    {result.features && (
+                      <div className="w-full mb-4">
+                        <h4 className="text-lg font-semibold mb-2">Thông số chi tiết:</h4>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-neutral-700">
+                                <th className="py-2 px-4">ID</th>
+                                <th className="py-2 px-4">Diện tích</th>
+                                <th className="py-2 px-4">Chu vi</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {result.features.map((feature: any) => (
+                                <tr key={feature.id} className="border-b border-neutral-700">
+                                  <td className="py-2 px-4">{feature.id}</td>
+                                  <td className="py-2 px-4">{feature.area}</td>
+                                  <td className="py-2 px-4">{feature.perimeter}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                     {result.result_image && (
                       <Dialog>
                         <DialogTrigger asChild>
